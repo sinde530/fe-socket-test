@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://sinde530.github.io/fe-socket-test/",
+
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "tsc && vite build",
