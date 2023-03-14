@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "tsc && vite build",
+    "deploy": "yarn build && git add dist -f && git commit -m 'hosting' && git subtree push --prefix dist origin gh-pages",
     "preview": "vite preview"
   },
   "dependencies": {
