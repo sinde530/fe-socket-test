@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import io from 'socket.io-client';
 
-function App() {
-  const videoRef = useRef();
+export default function App() {
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const socket = io('http://localhost:3001');
@@ -10,7 +10,9 @@ function App() {
     socket.on('frame', (data) => {
       const blob = new Blob([data], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
-      videoRef.current.src = url;
+      if (videoRef.current) {
+        videoRef.current.src = url;
+      }
     });
 
     return () => {
@@ -24,6 +26,4 @@ function App() {
       <p>qwewqe</p>
     </div>
   );
-}
-
-export default App;
+};
