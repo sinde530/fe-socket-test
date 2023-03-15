@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "homepage": "https://sinde530.github.io/fe-socket-test/",
-
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "tsc && vite build",
@@ -12,9 +11,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/socket.io-client": "^3.0.0",
     "gh-pages": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-webcam": "^7.0.1",
     "socket.io-client": "^4.6.1",
     "vite-tsconfig-paths": "^4.0.5"
   },

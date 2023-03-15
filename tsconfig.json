@@ -17,6 +17,7 @@
     "jsx": "react-jsx",
     "rootDir": ".",
     "baseUrl":".",
+    "types": ["socket.io-client"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
