@@ -1,6 +1,5 @@
-import React from 'react';
-import ChatWebSocket from './components/ChatWebSocket';
-
+import React from "react";
+import ChatWebSocket from "./components/ChatWebSocket";
 
 function App() {
   return (

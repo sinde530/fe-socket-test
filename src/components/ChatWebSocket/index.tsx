@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 const ChatWebSocket = () => {
-    const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<string[]>([]);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
-    const newSocket = new WebSocket('ws://localhost:8080/ws');
-
+    const newSocket = new WebSocket("ws://localhost:8080/ws");
 
     setSocket(newSocket);
 
@@ -26,14 +25,14 @@ const ChatWebSocket = () => {
     };
   }, []);
 
-    const sendMessage = () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(message);
-        setMessage('');
-        }
-    };
+  const sendMessage = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(message);
+      setMessage("");
+    }
+  };
 
-return (
+  return (
     <div>
       <div>
         {messages.map((msg, index) => (
