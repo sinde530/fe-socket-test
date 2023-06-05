@@ -1,13 +1,12 @@
-import React from "react";
-import ChatWebSocket from "./components/ChatWebSocket";
+import ChatApp from './components/ChatApp';
 
 function App() {
-  return (
-    <div className="App">
-      <h1>WebSocket Chat App</h1>
-      <ChatWebSocket />
-    </div>
-  );
+    return (
+        <div className="App">
+            <h1>WebSocket Chat App</h1>
+            <ChatApp />
+        </div>
+    );
 }
 
 export default App;
