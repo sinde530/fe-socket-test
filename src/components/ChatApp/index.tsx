@@ -1,99 +1,151 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+import {
+    AutoBox,
+    Container,
+    NickName,
+    PaddingTopBox,
+    RoomCard,
+    RoomInfo,
+    RoomTitle,
+    RoomsBox,
+    RoomsText,
+    ModalWrapper,
+    ModalContent,
+    ModalTitle,
+    ModalInput,
+    ModalButton,
+} from './styled';
+
+const socket = io('http://localhost:8080');
+
+interface Room {
+    title: string;
+    currentUsers: number;
+    maxUsers: number;
+}
 
 export default function ChatApp() {
-    const [nickname, setNickname] = useState('');
-    const [roomName, setRoomName] = useState('');
-    const [maxUsers, setMaxUsers] = useState(0);
-    const [rooms, setRooms] = useState<string[]>([]);
+    const [nickName, setNickname] = useState('');
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [newRoomTitle, setNewRoomTitle] = useState('');
+    const [newRoomMaxUsers, setNewRoomMaxUsers] = useState(0);
     const mockName = ['가나다', '라마바', '아자라', '지리아', '클아자'];
 
     useEffect(() => {
-        // 무작위 닉네임 선택
         const randomIndex = Math.floor(Math.random() * mockName.length);
         setNickname(mockName[randomIndex]);
 
-        // 서버로부터 방 목록 가져오기
-        axios
-            .get<string[]>('http://localhost:8080/rooms')
-            .then((response) => {
-                setRooms(response.data);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        // rooms 정보 업데이트 이벤트 리스너 등록
+        socket.on('chat', (eventName: string, data: Room[]) => {
+            if (eventName === 'rooms') {
+                setRooms(data);
+            }
+        });
+
+        // 컴포넌트 언마운트 시 소켓 연결 해제
+        return () => {
+            socket.disconnect();
+        };
     }, []);
 
-    const handleJoin = () => {
-        // 서버로 nickname 전송
-        axios.get(`http://localhost:8080/join/${roomName}`).then((response) => {
-            console.log(response.data);
-        });
+    const createRoom = () => {
+        setModalVisible(true);
     };
 
-    const handleCreateRoom = () => {
-        // 서버로 roomName과 maxUsers 전송
-        axios
-            .post('http://localhost:8080/create-room', {
-                name: roomName,
-                max_users: maxUsers,
+    const closeModal = () => {
+        setModalVisible(false);
+        setNewRoomTitle('');
+        setNewRoomMaxUsers(0);
+    };
+
+    const handleRoomTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewRoomTitle(e.target.value);
+    };
+
+    const handleMaxUsersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value, 10);
+        setNewRoomMaxUsers(value);
+    };
+
+    const confirmCreateRoom = () => {
+        const newRoom: Room = {
+            title: newRoomTitle,
+            currentUsers: 0,
+            maxUsers: newRoomMaxUsers,
+        };
+
+        // 방 추가 API 호출
+        fetch('http://localhost:8080/rooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newRoom),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data);
+                closeModal();
             })
-            .then((response) => {
-                console.log(response.data);
-                // 방 생성 후 방 목록 업데이트
-                setRooms([...rooms, roomName]);
-            });
-    };
-
-    const handleDeleteRoom = () => {
-        // 서버로 roomName 전송
-        axios
-            .delete(`http://localhost:8080/delete-room/${roomName}`)
-            .then((response) => {
-                console.log(response.data);
-                // 방 삭제 후 방 목록 업데이트
-                setRooms(rooms.filter((room) => room !== roomName));
+            .catch((error) => {
+                console.error('Error:', error);
+                closeModal();
             });
     };
 
     return (
-        <div>
-            <input
-                type="text"
-                placeholder="Enter nickname"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-            />
-            <button type="button" onClick={handleJoin}>
-                Join
-            </button>
+        <Container>
+            <PaddingTopBox>
+                <NickName
+                    type="input"
+                    value={nickName}
+                    onChange={(e) => setNickname(e.target.value)}
+                />
+                <AutoBox>
+                    <RoomsText>Rooms: {rooms.length}</RoomsText>
+                    <button type="button" onClick={createRoom}>
+                        방 생성하기
+                    </button>
+                </AutoBox>
 
-            <input
-                type="text"
-                placeholder="Enter room name"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-            />
-            <input
-                type="number"
-                placeholder="Enter max users"
-                value={maxUsers}
-                onChange={(e) => setMaxUsers(parseInt(e.target.value, 10))}
-            />
-            <button type="button" onClick={handleCreateRoom}>
-                Create Room
-            </button>
-            <button type="button" onClick={handleDeleteRoom}>
-                Delete Room
-            </button>
+                <RoomsBox>
+                    {rooms.map((room, index) => (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <RoomCard key={index}>
+                            <RoomTitle>{room.title}</RoomTitle>
+                            <RoomInfo>
+                                인원: {room.currentUsers}/{room.maxUsers}
+                            </RoomInfo>
+                        </RoomCard>
+                    ))}
+                </RoomsBox>
+            </PaddingTopBox>
 
-            <div>
-                <h2>Rooms:</h2>
-                {rooms.map((room, index) => (
-                    // eslint-disable-next-line react/no-array-index-key
-                    <div key={index}>{room}</div>
-                ))}
-            </div>
-        </div>
+            {modalVisible && (
+                <ModalWrapper>
+                    <ModalContent>
+                        <ModalTitle>방 생성</ModalTitle>
+                        <ModalInput
+                            type="text"
+                            placeholder="방 제목"
+                            value={newRoomTitle}
+                            onChange={handleRoomTitleChange}
+                        />
+                        <ModalInput
+                            type="number"
+                            placeholder="최대 인원"
+                            value={newRoomMaxUsers}
+                            onChange={handleMaxUsersChange}
+                        />
+                        <ModalButton onClick={confirmCreateRoom}>
+                            생성
+                        </ModalButton>
+                        <ModalButton onClick={closeModal}>취소</ModalButton>
+                    </ModalContent>
+                </ModalWrapper>
+            )}
+        </Container>
     );
 }

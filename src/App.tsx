@@ -1,11 +1,16 @@
+import { Route, Routes } from 'react-router-dom';
 import ChatApp from './components/ChatApp';
+import Rooms from './components/Rooms';
 
 function App() {
     return (
-        <div className="App">
-            <h1>WebSocket Chat App</h1>
-            <ChatApp />
-        </div>
+        <Routes>
+            <Route path="/fe-socket-test" element={<ChatApp />} />
+            <Route
+                path="/fe-socket-test/join/rooms/:roomName"
+                element={<Rooms />}
+            />
+        </Routes>
     );
 }
 

@@ -34,6 +34,7 @@
     "react-router-dom": "^6.11.2",
     "react-share": "^4.4.1",
     "react-social-icons": "^5.15.0",
+    "socket.io-client": "^4.6.2",
     "vite-plugin-env-compatible": "^1.1.1",
     "vite-tsconfig-paths": "^4.2.0",
     "xlsx": "^0.18.5"

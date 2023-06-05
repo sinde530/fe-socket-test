@@ -9,6 +9,12 @@ export default defineConfig({
 	  assetsInlineLimit: 0,
   },
   server: {
+    proxy: {
+      '/socket.io': {
+        target: 'ws://localhost:8080',
+        ws: true,
+      },
+    },
     host: "0.0.0.0",
     port: 5173,
   }
