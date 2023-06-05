@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
     AutoBox,
     Container,
@@ -20,12 +22,14 @@ import {
 const socket = io('http://localhost:8080');
 
 interface Room {
+    id: string;
     title: string;
     currentUsers: number;
     maxUsers: number;
 }
 
 export default function ChatApp() {
+    const navigate = useNavigate();
     const [nickName, setNickname] = useState('');
     const [rooms, setRooms] = useState<Room[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
@@ -37,18 +41,24 @@ export default function ChatApp() {
         const randomIndex = Math.floor(Math.random() * mockName.length);
         setNickname(mockName[randomIndex]);
 
-        // rooms 정보 업데이트 이벤트 리스너 등록
-        socket.on('chat', (eventName: string, data: Room[]) => {
-            if (eventName === 'rooms') {
-                setRooms(data);
-            }
+        // rooms join
+        socket.emit('join', '/');
+
+        socket.on('rooms', (updatedRooms) => {
+            console.log("'rooms' event received, updated rooms:", updatedRooms);
+            setRooms(updatedRooms);
+        });
+
+        socket.on('roomCreated', (newRoom) => {
+            console.log("'rooms' event received, updated rooms:", newRoom);
+            setRooms(newRoom);
         });
 
         // 컴포넌트 언마운트 시 소켓 연결 해제
         return () => {
             socket.disconnect();
         };
-    }, []);
+    }, [socket]);
 
     const createRoom = () => {
         setModalVisible(true);
@@ -69,30 +79,43 @@ export default function ChatApp() {
         setNewRoomMaxUsers(value);
     };
 
-    const confirmCreateRoom = () => {
+    const confirmCreateRoom = async () => {
+        if (newRoomMaxUsers < 2 || Number.isNaN(newRoomMaxUsers)) {
+            alert('인원은 최소 2명으로 해주세요.');
+            return;
+        }
         const newRoom: Room = {
+            id: '',
             title: newRoomTitle,
             currentUsers: 0,
             maxUsers: newRoomMaxUsers,
         };
 
-        // 방 추가 API 호출
-        fetch('http://localhost:8080/rooms', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(newRoom),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log(data);
-                closeModal();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                closeModal();
+        try {
+            const response = await axios.post<Room>(
+                'http://localhost:8080/rooms',
+                newRoom,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
+            console.log(response.data);
+            closeModal();
+
+            socket.emit('joinRoom', response.data.id);
+
+            // 업데이트된 방 정보를 기존 rooms 상태에 추가하여 업데이트
+            socket.on('roomCreated', (newRoom) => {
+                setRooms((prevRooms) => [...prevRooms, newRoom]);
             });
+
+            navigate(`/fe-socket-test/rooms/${response.data.id}/chat`);
+        } catch (error) {
+            console.error('Error:', error);
+            closeModal();
+        }
     };
 
     return (
